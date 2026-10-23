@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  posts     Post[]
+  votes     Vote[]
+  createdAt DateTime @default(now())
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  title     String
+  url       String
+  score     Int      @default(0)
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  Int
+  votes     Vote[]
+  createdAt DateTime @default(now())
+
+  // TASK 2: add a composite @@index here so the newest-first feed read
+  // (ORDER BY "createdAt" DESC) can use an index instead of a sequential scan.
+}
+
+model Vote {
+  id     Int  @id @default(autoincrement())
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
+  post   Post @relation(fields: [postId], references: [id])
+  postId Int
+
+  // A user can vote on a given post at most once.
+  @@unique([userId, postId])
+}
